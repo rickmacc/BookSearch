@@ -20,15 +20,19 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Book>> {
 
-    private final String TAG = "MainActivity";
-    private final String BOOK_API = "https://www.googleapis.com/books/v1/volumes?q=android&maxResults=1";
+    private final String TAG = MainActivity.class.getSimpleName();
     private BookArrayAdapter adapter = null;
     private TextView emptyStateTextView = null;
+    private final int LOADER_KEY = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ListView bookListView = (ListView) findViewById(R.id.book_list);
+        emptyStateTextView = (TextView) findViewById(R.id.empty);
+        bookListView.setEmptyView(emptyStateTextView);
 
         ProgressBar pb = (ProgressBar) findViewById(R.id.progress_bar);
         pb.setVisibility(ProgressBar.INVISIBLE);
@@ -36,9 +40,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public void search(View view) {
 
-        EditText editText = (EditText) findViewById(R.id.search_box);
-        String searchTerms = editText.getText().toString();
-        Log.d(TAG, "search: " + searchTerms);
+        Log.d(TAG, "search");
 
         hideKeyboard(this);
 
@@ -46,32 +48,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         pb.setVisibility(ProgressBar.VISIBLE);
 
         ListView bookListView = (ListView) findViewById(R.id.book_list);
+        bookListView.setVisibility(View.INVISIBLE);
 
-        emptyStateTextView = (TextView) findViewById(R.id.empty);
-        bookListView.setEmptyView(emptyStateTextView);
-
-        /*
-        ArrayList<Book> books = new ArrayList<Book>();
-        books.add(new Book("The Old Man and The Sea"));
-        if (books.isEmpty()) { emptyStateTextView.setText(R.string.no_books); }
-        */
-
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
-
-        if (isConnected) {
+        if (checkNetworkConnectivity()) {
             adapter = new BookArrayAdapter(this, 0, new ArrayList<Book>());
 
-            //pb = (ProgressBar) findViewById(R.id.progress_bar);
-            //pb.setVisibility(ProgressBar.INVISIBLE);
-            updateUI();
+            // Set the adapter on the {@link ListView}
+            // so the list can be populated in the user interface
+            bookListView.setAdapter(adapter);
+
+            getSupportLoaderManager().restartLoader(LOADER_KEY, null, this);
         } else {
-            pb = (ProgressBar) findViewById(R.id.progress_bar);
-            pb.setVisibility(ProgressBar.INVISIBLE);
             emptyStateTextView.setText(R.string.no_network);
         }
 
@@ -80,40 +67,36 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public Loader<ArrayList<Book>> onCreateLoader(int id, Bundle args) {
         Log.d(TAG, "onCreateLoader");
-        return new BookLoader(MainActivity.this);
+
+        EditText editText = (EditText) findViewById(R.id.search_box);
+        String searchTerms = editText.getText().toString();
+
+        BookLoader loader = new BookLoader(MainActivity.this);
+        loader.setQuery(searchTerms);
+
+        return loader;
     }
 
     @Override
     public void onLoadFinished(Loader<ArrayList<Book>> loader, ArrayList<Book> data) {
 
         Log.d(TAG, "onLoadFinished");
+
         ProgressBar pb = (ProgressBar) findViewById(R.id.progress_bar);
         pb.setVisibility(ProgressBar.INVISIBLE);
 
-        emptyStateTextView.setText(R.string.no_books);
-
         adapter.clear();
         adapter.setBooks(data);
+
+        if (data.isEmpty()) {
+            emptyStateTextView.setText(R.string.no_books);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<ArrayList<Book>> loader) {
         Log.d(TAG, "onLoaderReset");
         adapter.setBooks(new ArrayList<Book>());
-    }
-
-    /**
-     * Update the UI with the given earthquake information.
-     */
-    private void updateUI() {
-        // Find a reference to the {@link ListView} in the layout
-        ListView bookListView = (ListView) findViewById(R.id.book_list);
-
-        // Set the adapter on the {@link ListView}
-        // so the list can be populated in the user interface
-        bookListView.setAdapter(adapter);
-
-        getSupportLoaderManager().initLoader(1, null, this).forceLoad();
     }
 
     public static void hideKeyboard(Activity activity) {
@@ -125,6 +108,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             view = new View(activity);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private boolean checkNetworkConnectivity() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+
+        return isConnected;
     }
 
 }

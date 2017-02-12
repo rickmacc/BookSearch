@@ -7,9 +7,13 @@ package org.eightfoldpath.booksearch;
 public class Book {
 
     private String name = null;
+    private String infoUrl = null;
+    private String author = null;
 
-    public Book(String name) {
+    public Book(String name, String infoUrl, String author) {
         this.name = name;
+        this.infoUrl = infoUrl;
+        this.author = author;
     }
 
     public String getName() {
@@ -18,5 +22,21 @@ public class Book {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getInfoUrl() {
+        return infoUrl;
+    }
+
+    public void setInfoUrl(String infoUrl) {
+        this.infoUrl = infoUrl;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

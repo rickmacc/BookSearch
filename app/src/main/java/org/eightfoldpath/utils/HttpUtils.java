@@ -59,6 +59,16 @@ public final class HttpUtils {
             return jsonResponse;
         }
 
+        try {
+            Thread.sleep(2000);
+        } catch(Exception e) {
+            Log.d(LOG_TAG, "Blew up");
+        }
+
+
+
+
+
         HttpURLConnection urlConnection = null;
         InputStream inputStream = null;
         try {

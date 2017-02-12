@@ -2,5 +2,5 @@
     <string name="app_name">BookSearch</string>
     <string name="search">Search</string>
     <string name="no_network">No Network Connection</string>
-    <string name="no_books">No Books Found</string>
+    <string name="no_books">No Books Found; try changing your search terms</string>
 </resources>
